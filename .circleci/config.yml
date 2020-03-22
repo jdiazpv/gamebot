@@ -1,0 +1,63 @@
+version: 2.1
+
+anchors:
+  container-config: &container-config
+    docker:
+      - image: circleci/node:10.15
+        environment:
+          TERM: dumb
+  cache-dependencies: &cache-dependencies
+    save_cache:
+      key: dependency-cache-{{ checksum "package.json" }}
+      paths:
+        - node_modules
+  load-dependency-cache: &load-dependency-cache
+    restore_cache:
+      key: dependency-cache-{{ checksum "package.json" }}
+  configure-aws-access: &configure-aws-access
+    run:
+      name: Configure AWS access
+      command: |
+        mkdir -p ~/.aws
+        cat > ~/.aws/credentials << EOL
+        [default]
+        aws_access_key_id = ${ACCESS_KEY_ID}
+        aws_secret_access_key = ${SECRET_ACCESS_KEY}
+        EOL
+  deploy: &deploy
+    <<: *container-config
+    steps:
+      - checkout
+      - *configure-aws-access
+      - *load-dependency-cache
+      - run:
+          name: Deploy API
+          command: |
+            [[ ! -z "$STAGE" ]] || STAGE=$CIRCLE_USERNAME
+            echo Deploying API for stage $STAGE
+            npm run deploy
+
+orbs:
+  node: circleci/node@1.1.6
+
+jobs:
+  install:
+    <<: *container-config
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm i
+      - *cache-dependencies
+  deploy:
+    <<: *deploy
+
+workflows:
+  version: 2
+
+  deploy-pipeline:
+    jobs:
+      - install
+      - deploy:
+          requires:
+            - install

@@ -1,0 +1,17 @@
+{
+    "name": "gamebot",
+    "description": "Serverless slackbot for creating and managing tally games",
+    "license": "MIT",
+    "scripts": {
+      "build": "echo 'building repo'",
+      "deploy": "serverless deploy"
+    },
+    "dependencies": {
+      "request": "^2.88.0",
+      "request-promise": "^4.2.4"
+    },
+    "devDependencies": {
+      "serverless": "^1.40.0"
+    }
+  }
+  
